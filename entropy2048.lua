@@ -30,6 +30,7 @@ local player = require(player_file)
 local function play_game()
   local game = game_manager:new()
   assert(game:get_score() == 0)
+  -- game:load({nil, nil, nil, nil, 8, 2, 2, nil, 2, 8, nil, nil, 128, 128, 8, nil}, 1548, 128)
   while game:is_alive() do
     if verbose then game:print() end
     local action = player:get_action(game)

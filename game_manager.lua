@@ -119,6 +119,14 @@ function game_manager:new()
     return best_tile
   end
 
+  function game:load(new_board, new_score, new_best_tile)
+    for i = 1, num_cells do
+      board[i] = new_board[i]
+    end
+    score = new_score
+    best_tile = new_best_tile
+end
+
   function game:print(file)
     file = file or io.stdout
     file:write("-----------------------------\n")
