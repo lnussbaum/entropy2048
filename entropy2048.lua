@@ -44,7 +44,7 @@ io.write("Random seed: ", seed, "\n")
 math.randomseed(seed)
 
 io.write("Running ", num_games, " games with player '", player_file, "'\n")
-local average, max, best_tile = 0, 0, 0
+local average, max, best_tile, worst_best_tile = 0, 0, 0, nil
 for i = 1, num_games do
   local score, current_best_tile = play_game()
   io.write(score .. " ")
@@ -56,10 +56,14 @@ for i = 1, num_games do
   if current_best_tile > best_tile then
     best_tile = current_best_tile
   end
+  if worst_best_tile == nil or current_best_tile < worst_best_tile then
+    worst_best_tile = current_best_tile
+  end
 end
 average = average / num_games
 
 io.write("\nAverage score: " .. average .. "\n")
 io.write("Max score: " .. max .. "\n")
 io.write("Best tile: " .. best_tile .. "\n")
+io.write("Worst Best tile: " .. worst_best_tile .. "\n")
 
