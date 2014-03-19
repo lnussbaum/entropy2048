@@ -139,9 +139,22 @@ function game_manager:new()
       file:write("|      |      |      |      |\n")
       file:write("-----------------------------\n")
     end
-    file:write("Score: ")
-    file:write(score)
-    file:write("\n")
+    file:write("Score: " .. score .. "\nBest tile: " .. best_tile .. "\n")
+    file:write("Board: {")
+    for i = 1, num_cells - 1 do
+      if board[i] == nil then
+        file:write("nil, ")
+      else
+        file:write(board[i] .. ", ")
+      end
+    end
+    if board[num_cells] == nil then
+      file:write("nil}\n")
+    else
+      file:write(board[num_cells] .. "}\n")
+    end
+
+
   end
 
   -- Checks if the game is finished.
