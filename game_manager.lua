@@ -110,6 +110,14 @@ function game_manager:new()
     return board
   end
 
+  function game:get_tile(i)
+    return get_tile(i)
+  end
+
+  function game:set_tile(i, v)
+    return set_tile(i, v)
+  end
+
   function game:get_score()
     return score
   end
@@ -125,7 +133,16 @@ function game_manager:new()
     end
     score = new_score
     best_tile = new_best_tile
-end
+  end
+
+  function game:load_from(orig)
+    for i = 1, num_cells do
+      board[i] = orig:get_board()[i]
+    end
+    score = orig:get_score()
+    alive = orig:is_alive()
+    best_tile = orig:get_best_tile()
+  end
 
   function game:print(file)
     file = file or io.stdout

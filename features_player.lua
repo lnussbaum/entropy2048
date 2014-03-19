@@ -18,6 +18,7 @@
 -- Two of the features are inspired from
 -- http://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048
 
+local game_manager = require("game_manager")
 local player = {}
 local verbose = false
 
@@ -327,23 +328,106 @@ local function evaluate_with_spawns(game)
   return mean_value / num_empty_cells
 end
 
-function player:get_action(game)
-  
-  -- Take the action that maximizes the value.
-  local best_value = -math.huge, best_action
-  for i = 1, 4 do
-    if game:move(i, false) then
-      -- local value = evaluate(game)
-      local value = evaluate_with_spawns(game)
-      game:undo()
-      if value > best_value then
-        best_value = value
-        best_action = i
+local absmin = -1000000;
+local absmax = 1000000;
+
+local function mean(arr)
+  s = 0.0
+  n = 0
+  for _, elem in ipairs(arr) do
+    s = s + elem
+  end
+  return s/#arr
+end
+
+local eiverbose = false
+
+local function expectimax(game, depth, player)
+  if eiverbose then
+    io.stdout:write(string.format("EI entering depth=%d player=%s\n", depth, tostring(player)))
+  end
+  if depth == 0 then
+    local e = evaluate(game)
+    if eiverbose then
+      io.stdout:write(string.format("EI returning depth=%d val=%f\n", depth, e))
+    end
+    return e, nil
+  else
+    local ngame = game_manager:new()
+    if player == true then -- maximizing player
+      local best_value = absmin
+      local best_move = nil
+      for i = 1, 4 do
+        ngame:load_from(game)
+        if ngame:move(i, false) then
+          if best_move == nil then
+            best_move = i -- use first possible move
+          end
+          if eiverbose then
+            io.stdout:write(string.format("- MAX trying move %d at depth %d...\n", i, depth))
+          end
+          local value, move = expectimax(ngame, depth - 1, false)
+          if eiverbose then
+            io.stdout:write(string.format("- MAX returning from move %d at depth %d: %f\n", i, depth, value))
+          end
+          if value > best_value then
+            best_value = value
+            best_move = i
+          end
+        end
       end
+      if eiverbose then
+        io.stdout:write(string.format("EI returning after MAX depth=%d val=%f\n", depth, best_value))
+      end
+      return best_value, best_move
+    else
+      local values = {}
+      values[2] = {}
+      values[4] = {}
+      local best_value = absmax
+      local best_move
+      local evaluated = 0
+      for i = 1, game:get_num_cells() do
+        if game:get_tile(i) == nil then
+          ngame:load_from(game)
+          for val = 2, 4, 2 do
+            ngame:set_tile(i, val)
+            if eiverbose then
+              io.stdout:write(string.format("EXPECT trying set_tile(%d, %d) at depth %d...\n", i, val, depth))
+            end
+            local value, move = expectimax(ngame, depth - 1, true)
+            if eiverbose then
+              io.stdout:write(string.format("EXPECT returning from set_tile(%d, %d) at depth %d: %f\n", i, val, depth, value))
+            end
+            values[val][#values[val]+1] = value
+          end
+        end
+      end
+      local m = 0.9*mean(values[2]) + 0.1*mean(values[4])
+      if eiverbose then
+        io.stdout:write(string.format("EI returning after EXPECT depth=%d avg=%f #val=%d\n", depth, m, #values[2]))
+      end
+      return m
     end
   end
+end
 
-  return best_action
+function player:get_action(game)
+
+  local depth
+  if num_free_cells(game) < 3 then
+    depth = 9
+  elseif num_free_cells(game) < 5 then
+    depth = 7
+  else
+    depth = 5
+  end
+
+  local best_value, best_move = expectimax(game, depth, true)
+  if verbose then
+    io.stdout:write(string.format("Best move: %d (val = %f)\n", best_move, best_value))
+  end
+  return best_move
 end
 
 function player:get_weights()
