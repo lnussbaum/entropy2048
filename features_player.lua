@@ -353,11 +353,11 @@ local function expectimax(game, depth, player)
     end
     return e, nil
   else
-    local ngame = game_manager:new()
     if player == true then -- maximizing player
       local best_value = absmin
       local best_move = nil
       for i = 1, 4 do
+        local ngame = game_manager:new()
         ngame:load_from(game)
         if ngame:move(i, false) then
           if best_move == nil then
@@ -389,6 +389,7 @@ local function expectimax(game, depth, player)
       local evaluated = 0
       for i = 1, game:get_num_cells() do
         if game:get_tile(i) == nil then
+          local ngame = game_manager:new()
           ngame:load_from(game)
           for val = 2, 4, 2 do
             ngame:set_tile(i, val)
